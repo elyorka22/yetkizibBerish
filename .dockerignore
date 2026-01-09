@@ -1,12 +1,14 @@
-node_modules
-.git
-.env
-.env.local
-*.log
-.DS_Store
-frontend
-.next
-dist
-*.md
-!README.md
+*
+!backend
+backend/*
+!backend/package.json
+!backend/package-lock.json
+!backend/tsconfig.json
+!backend/src
+backend/src/*
+!backend/src/**
+!.gitignore
+!.dockerignore
+!nixpacks.toml
+!railway.json
 
