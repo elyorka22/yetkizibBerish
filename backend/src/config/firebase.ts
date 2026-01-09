@@ -14,20 +14,56 @@ export function initializeFirebaseAdmin() {
     
     if (!privateKey || !process.env.FIREBASE_CLIENT_EMAIL || !process.env.FIREBASE_PROJECT_ID) {
       console.error('Firebase Admin credentials are missing. Please check environment variables.');
+      console.error('FIREBASE_PROJECT_ID:', process.env.FIREBASE_PROJECT_ID ? 'SET' : 'MISSING');
+      console.error('FIREBASE_CLIENT_EMAIL:', process.env.FIREBASE_CLIENT_EMAIL ? 'SET' : 'MISSING');
+      console.error('FIREBASE_PRIVATE_KEY:', process.env.FIREBASE_PRIVATE_KEY ? 'SET' : 'MISSING');
       throw new Error('Firebase Admin credentials are missing. Required: FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY');
     }
 
-    // Обработка private key: заменяем \n на реальные переносы строк
-    // Поддерживаем разные форматы: с \\n, с \n, или уже с переносами
-    privateKey = privateKey
-      .replace(/\\n/g, '\n')  // Заменяем \\n на \n
-      .replace(/\\\\n/g, '\n') // Заменяем \\\\n на \n (если двойной экранирование)
-      .trim(); // Убираем лишние пробелы
+    // Логируем первые и последние символы для отладки (без полного ключа)
+    console.log('FIREBASE_PRIVATE_KEY length:', privateKey.length);
+    console.log('FIREBASE_PRIVATE_KEY starts with:', privateKey.substring(0, 30));
+    console.log('FIREBASE_PRIVATE_KEY ends with:', privateKey.substring(privateKey.length - 30));
+
+    // Обработка private key: пробуем разные варианты
+    // Вариант 1: Если ключ уже содержит реальные переносы строк
+    if (privateKey.includes('\n') && !privateKey.includes('\\n')) {
+      // Уже правильный формат
+      console.log('Using private key with real newlines');
+    } else {
+      // Вариант 2: Заменяем \\n на реальные переносы строк
+      privateKey = privateKey.replace(/\\n/g, '\n');
+      console.log('Replaced \\n with real newlines');
+    }
+
+    // Убираем лишние пробелы в начале и конце
+    privateKey = privateKey.trim();
+
+    // Убираем возможные кавычки в начале и конце
+    if ((privateKey.startsWith('"') && privateKey.endsWith('"')) || 
+        (privateKey.startsWith("'") && privateKey.endsWith("'"))) {
+      privateKey = privateKey.slice(1, -1);
+      console.log('Removed surrounding quotes');
+    }
 
     // Проверяем, что ключ начинается правильно
     if (!privateKey.includes('BEGIN PRIVATE KEY') || !privateKey.includes('END PRIVATE KEY')) {
-      console.error('FIREBASE_PRIVATE_KEY format is invalid. It should include BEGIN PRIVATE KEY and END PRIVATE KEY');
+      console.error('FIREBASE_PRIVATE_KEY format is invalid.');
+      console.error('Key should start with: -----BEGIN PRIVATE KEY-----');
+      console.error('Key should end with: -----END PRIVATE KEY-----');
+      console.error('Actual start:', privateKey.substring(0, 50));
+      console.error('Actual end:', privateKey.substring(Math.max(0, privateKey.length - 50)));
       throw new Error('Invalid FIREBASE_PRIVATE_KEY format. Make sure it includes -----BEGIN PRIVATE KEY----- and -----END PRIVATE KEY-----');
+    }
+
+    // Проверяем, что ключ содержит правильные маркеры
+    if (!privateKey.startsWith('-----BEGIN PRIVATE KEY-----')) {
+      console.error('FIREBASE_PRIVATE_KEY does not start with -----BEGIN PRIVATE KEY-----');
+      console.error('Actual start:', privateKey.substring(0, 50));
+    }
+    if (!privateKey.endsWith('-----END PRIVATE KEY-----')) {
+      console.error('FIREBASE_PRIVATE_KEY does not end with -----END PRIVATE KEY-----');
+      console.error('Actual end:', privateKey.substring(Math.max(0, privateKey.length - 50)));
     }
 
     try {
