@@ -10,11 +10,24 @@ export function initializeFirebaseAdmin() {
   }
 
   if (!admin.apps.length) {
-    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+    let privateKey = process.env.FIREBASE_PRIVATE_KEY;
     
     if (!privateKey || !process.env.FIREBASE_CLIENT_EMAIL || !process.env.FIREBASE_PROJECT_ID) {
       console.error('Firebase Admin credentials are missing. Please check environment variables.');
       throw new Error('Firebase Admin credentials are missing. Required: FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY');
+    }
+
+    // Обработка private key: заменяем \n на реальные переносы строк
+    // Поддерживаем разные форматы: с \\n, с \n, или уже с переносами
+    privateKey = privateKey
+      .replace(/\\n/g, '\n')  // Заменяем \\n на \n
+      .replace(/\\\\n/g, '\n') // Заменяем \\\\n на \n (если двойной экранирование)
+      .trim(); // Убираем лишние пробелы
+
+    // Проверяем, что ключ начинается правильно
+    if (!privateKey.includes('BEGIN PRIVATE KEY') || !privateKey.includes('END PRIVATE KEY')) {
+      console.error('FIREBASE_PRIVATE_KEY format is invalid. It should include BEGIN PRIVATE KEY and END PRIVATE KEY');
+      throw new Error('Invalid FIREBASE_PRIVATE_KEY format. Make sure it includes -----BEGIN PRIVATE KEY----- and -----END PRIVATE KEY-----');
     }
 
     try {

@@ -80,9 +80,13 @@ NEXT_PUBLIC_API_URL=https://your-backend-url.railway.app
 ### Шаг 1: Создание Service Account
 
 1. Откройте [Firebase Console](https://console.firebase.google.com/)
-2. Перейдите в **Project Settings** → **Service Accounts**
-3. Нажмите **"Generate new private key"**
-4. Сохраните JSON файл (он понадобится для переменных окружения)
+2. Выберите проект: **yetkazibberish-c5af5**
+3. Перейдите в **Project Settings** (⚙️) → **Service Accounts**
+4. Нажмите **"Generate new private key"** (Создать новый закрытый ключ)
+5. Подтвердите создание ключа
+6. JSON файл автоматически скачается
+
+**📖 Подробная инструкция:** См. [HOW_TO_GET_FIREBASE_PRIVATE_KEY.md](./HOW_TO_GET_FIREBASE_PRIVATE_KEY.md)
 
 ### Шаг 2: Создание проекта в Railway
 
@@ -113,8 +117,11 @@ NODE_ENV=production
 
 **Важно:** 
 - `FIREBASE_PRIVATE_KEY` должен быть в формате с `\n` (новые строки)
-- Скопируйте значение из JSON файла Service Account
+- Скопируйте значение `private_key` из JSON файла **как есть**, включая `-----BEGIN PRIVATE KEY-----` и `-----END PRIVATE KEY-----`
 - `FIREBASE_CLIENT_EMAIL` - это `client_email` из JSON файла
+- `FIREBASE_PROJECT_ID` - это `project_id` из JSON файла
+
+**📖 Подробная инструкция по получению ключей:** См. [HOW_TO_GET_FIREBASE_PRIVATE_KEY.md](./HOW_TO_GET_FIREBASE_PRIVATE_KEY.md)
 
 ### Шаг 5: Деплой
 
