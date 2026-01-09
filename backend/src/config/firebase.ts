@@ -22,8 +22,18 @@ export function initializeFirebaseAdmin() {
 
     // Логируем первые и последние символы для отладки (без полного ключа)
     console.log('FIREBASE_PRIVATE_KEY length:', privateKey.length);
-    console.log('FIREBASE_PRIVATE_KEY starts with:', privateKey.substring(0, 30));
-    console.log('FIREBASE_PRIVATE_KEY ends with:', privateKey.substring(privateKey.length - 30));
+    console.log('FIREBASE_PRIVATE_KEY starts with:', privateKey.substring(0, 50));
+    console.log('FIREBASE_PRIVATE_KEY ends with:', privateKey.substring(Math.max(0, privateKey.length - 50)));
+    
+    // Проверяем длину ключа - должен быть около 1600-1700 символов
+    if (privateKey.length < 500) {
+      console.error('⚠️ FIREBASE_PRIVATE_KEY is too short!');
+      console.error('Expected length: ~1600-1700 characters');
+      console.error('Actual length:', privateKey.length);
+      console.error('The key appears to be truncated or copied incorrectly.');
+      console.error('Please copy the ENTIRE private_key value from the JSON file.');
+      throw new Error(`FIREBASE_PRIVATE_KEY is too short (${privateKey.length} chars, expected ~1600-1700). The key appears to be truncated. Please copy the ENTIRE private_key value from the JSON file.`);
+    }
 
     // Обработка private key: пробуем разные варианты
     // Вариант 1: Если ключ уже содержит реальные переносы строк
