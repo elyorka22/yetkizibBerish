@@ -42,7 +42,18 @@ git push origin main
 
 ### Шаг 4: Переменные окружения
 
-Добавьте следующие переменные окружения в Vercel:
+**Вариант 1: Одна переменная с JSON (рекомендуется)**
+
+Добавьте одну переменную окружения в Vercel:
+
+```
+NEXT_PUBLIC_FIREBASE_CONFIG={"apiKey":"AIzaSyBdc-5mE9b1zy-pjSKfMCEnmyrWlfNOEtg","authDomain":"yetkazibberish-c5af5.firebaseapp.com","projectId":"yetkazibberish-c5af5","storageBucket":"yetkazibberish-c5af5.firebasestorage.app","messagingSenderId":"258709998480","appId":"1:258709998480:web:293cd08d2905ab90414115"}
+NEXT_PUBLIC_API_URL=https://your-backend-url.railway.app
+```
+
+**Вариант 2: Отдельные переменные (альтернатива)**
+
+Если предпочитаете отдельные переменные:
 
 ```
 NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyBdc-5mE9b1zy-pjSKfMCEnmyrWlfNOEtg
@@ -54,7 +65,9 @@ NEXT_PUBLIC_FIREBASE_APP_ID=1:258709998480:web:293cd08d2905ab90414115
 NEXT_PUBLIC_API_URL=https://your-backend-url.railway.app
 ```
 
-**Важно:** Замените `https://your-backend-url.railway.app` на реальный URL вашего backend после деплоя на Railway.
+**Важно:** 
+- Замените `https://your-backend-url.railway.app` на реальный URL вашего backend после деплоя на Railway
+- При использовании JSON варианта убедитесь, что JSON в одну строку без переносов
 
 ### Шаг 5: Деплой
 
