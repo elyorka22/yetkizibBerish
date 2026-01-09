@@ -7,11 +7,12 @@ import { orderRouter } from './routes/orders';
 
 dotenv.config();
 
+// Initialize Firebase Admin BEFORE importing routes
+// This ensures Firebase is initialized before any routes try to use it
+initializeFirebaseAdmin();
+
 const app = express();
 const PORT = process.env.PORT || 3001;
-
-// Initialize Firebase Admin
-initializeFirebaseAdmin();
 
 // Middleware
 app.use(cors());

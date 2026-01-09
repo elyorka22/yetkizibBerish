@@ -1,6 +1,8 @@
 import * as admin from 'firebase-admin';
 
 let initialized = false;
+let dbInstance: admin.firestore.Firestore | null = null;
+let authInstance: admin.auth.Auth | null = null;
 
 export function initializeFirebaseAdmin() {
   if (initialized) {
@@ -24,15 +26,48 @@ export function initializeFirebaseAdmin() {
         }),
       });
       console.log('Firebase Admin initialized successfully');
+      
+      // Инициализируем экземпляры после успешной инициализации
+      dbInstance = admin.firestore();
+      authInstance = admin.auth();
     } catch (error) {
       console.error('Error initializing Firebase Admin:', error);
       throw error;
     }
+  } else {
+    // Если приложение уже инициализировано, получаем экземпляры
+    dbInstance = admin.firestore();
+    authInstance = admin.auth();
   }
 
   initialized = true;
 }
 
-export const db = admin.firestore();
-export const auth = admin.auth();
+// Экспортируем функции-геттеры вместо прямых экземпляров
+export function getDb(): admin.firestore.Firestore {
+  if (!dbInstance) {
+    throw new Error('Firebase Admin not initialized. Call initializeFirebaseAdmin() first.');
+  }
+  return dbInstance;
+}
+
+export function getAuth(): admin.auth.Auth {
+  if (!authInstance) {
+    throw new Error('Firebase Admin not initialized. Call initializeFirebaseAdmin() first.');
+  }
+  return authInstance;
+}
+
+// Для обратной совместимости экспортируем как свойства (lazy getters)
+export const db = new Proxy({} as admin.firestore.Firestore, {
+  get(target, prop) {
+    return getDb()[prop as keyof admin.firestore.Firestore];
+  }
+}) as admin.firestore.Firestore;
+
+export const auth = new Proxy({} as admin.auth.Auth, {
+  get(target, prop) {
+    return getAuth()[prop as keyof admin.auth.Auth];
+  }
+}) as admin.auth.Auth;
 
