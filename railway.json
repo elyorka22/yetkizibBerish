@@ -1,7 +1,9 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
+  "$comment": "This file must be in the root directory. Root Directory in Railway should be set to empty or '.'",
   "build": {
-    "builder": "NIXPACKS"
+    "builder": "NIXPACKS",
+    "nixpacksConfigPath": "nixpacks.toml"
   },
   "deploy": {
     "startCommand": "cd backend && npm start",
