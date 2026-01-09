@@ -1,0 +1,143 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function: проверка авторизации
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function: получение роли пользователя
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    // Helper function: проверка на Super Admin
+    function isSuperAdmin() {
+      return isAuthenticated() && getUserRole() == 'super_admin';
+    }
+    
+    // Helper function: проверка на Manager или Super Admin
+    function isManagerOrAdmin() {
+      return isAuthenticated() && (getUserRole() == 'manager' || getUserRole() == 'super_admin');
+    }
+    
+    // Helper function: проверка, что пользователь является владельцем документа
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // ============================================
+    // USERS COLLECTION
+    // ============================================
+    match /users/{userId} {
+      // Чтение: только авторизованные пользователи
+      allow read: if isAuthenticated();
+      
+      // Создание: только авторизованные пользователи могут создавать свой профиль
+      allow create: if isAuthenticated() && isOwner(userId);
+      
+      // Обновление: пользователь может обновить свой профиль, или Super Admin может обновить любой
+      allow update: if isAuthenticated() && 
+        (isOwner(userId) || isSuperAdmin());
+      
+      // Удаление: только Super Admin
+      allow delete: if isSuperAdmin();
+    }
+    
+    // ============================================
+    // ORDERS COLLECTION
+    // ============================================
+    match /orders/{orderId} {
+      // Чтение: 
+      // - Авторизованные пользователи могут читать все заказы
+      // - Сборщики и курьеры видят только свои назначенные заказы
+      allow read: if isAuthenticated() && (
+        isManagerOrAdmin() || 
+        resource.data.pickerId == request.auth.uid ||
+        resource.data.courierId == request.auth.uid
+      );
+      
+      // Создание: любой может создать заказ (включая гостей через backend)
+      // В реальности заказы создаются через backend API, но на всякий случай разрешаем
+      allow create: if true;
+      
+      // Обновление:
+      // - Super Admin и Manager могут обновлять любые заказы
+      // - Сборщик может обновлять только назначенные ему заказы
+      // - Курьер может обновлять только назначенные ему заказы
+      allow update: if isAuthenticated() && (
+        isManagerOrAdmin() ||
+        (getUserRole() == 'picker' && resource.data.pickerId == request.auth.uid) ||
+        (getUserRole() == 'courier' && resource.data.courierId == request.auth.uid)
+      );
+      
+      // Удаление: запрещено (заказы не удаляются)
+      allow delete: if false;
+    }
+    
+    // ============================================
+    // PRODUCTS COLLECTION
+    // ============================================
+    match /products/{productId} {
+      // Чтение: публичный доступ (для каталога)
+      allow read: if true;
+      
+      // Создание: только Super Admin и Manager
+      allow create: if isManagerOrAdmin();
+      
+      // Обновление: только Super Admin и Manager
+      allow update: if isManagerOrAdmin();
+      
+      // Удаление: только Super Admin
+      allow delete: if isSuperAdmin();
+    }
+    
+    // ============================================
+    // CATEGORIES COLLECTION
+    // ============================================
+    match /categories/{categoryId} {
+      // Чтение: публичный доступ (для каталога)
+      allow read: if true;
+      
+      // Создание: только Super Admin и Manager
+      allow create: if isManagerOrAdmin();
+      
+      // Обновление: только Super Admin и Manager
+      allow update: if isManagerOrAdmin();
+      
+      // Удаление: только Super Admin
+      allow delete: if isSuperAdmin();
+    }
+    
+    // ============================================
+    // BANNERS COLLECTION (для будущего использования)
+    // ============================================
+    match /banners/{bannerId} {
+      // Чтение: публичный доступ
+      allow read: if true;
+      
+      // Запись: только Super Admin и Manager
+      allow write: if isManagerOrAdmin();
+    }
+    
+    // ============================================
+    // STATISTICS COLLECTION (для будущего использования)
+    // ============================================
+    match /statistics/{statId} {
+      // Чтение: только Super Admin и Manager
+      allow read: if isManagerOrAdmin();
+      
+      // Запись: только Super Admin
+      allow write: if isSuperAdmin();
+    }
+    
+    // ============================================
+    // DEFAULT: запрет доступа ко всем остальным коллекциям
+    // ============================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+

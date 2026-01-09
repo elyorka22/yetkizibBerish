@@ -1,0 +1,82 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper function: проверка авторизации
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function: получение роли пользователя из Firestore
+    function getUserRole() {
+      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    // Helper function: проверка на Super Admin или Manager
+    function isManagerOrAdmin() {
+      return isAuthenticated() && 
+        (getUserRole() == 'super_admin' || getUserRole() == 'manager');
+    }
+    
+    // ============================================
+    // PRODUCTS - изображения товаров
+    // ============================================
+    match /products/{productId}/{fileName} {
+      // Чтение: публичный доступ
+      allow read: if true;
+      
+      // Запись: только Super Admin и Manager
+      allow write: if isManagerOrAdmin() && 
+        request.resource.size < 5 * 1024 * 1024 && // Максимум 5MB
+        request.resource.contentType.matches('image/.*');
+    }
+    
+    // ============================================
+    // CATEGORIES - изображения категорий
+    // ============================================
+    match /categories/{categoryId}/{fileName} {
+      // Чтение: публичный доступ
+      allow read: if true;
+      
+      // Запись: только Super Admin и Manager
+      allow write: if isManagerOrAdmin() && 
+        request.resource.size < 5 * 1024 * 1024 && // Максимум 5MB
+        request.resource.contentType.matches('image/.*');
+    }
+    
+    // ============================================
+    // BANNERS - баннеры
+    // ============================================
+    match /banners/{bannerId}/{fileName} {
+      // Чтение: публичный доступ
+      allow read: if true;
+      
+      // Запись: только Super Admin и Manager
+      allow write: if isManagerOrAdmin() && 
+        request.resource.size < 10 * 1024 * 1024 && // Максимум 10MB
+        request.resource.contentType.matches('image/.*');
+    }
+    
+    // ============================================
+    // USER AVATARS - аватары пользователей
+    // ============================================
+    match /avatars/{userId}/{fileName} {
+      // Чтение: публичный доступ
+      allow read: if true;
+      
+      // Запись: пользователь может загрузить свой аватар
+      allow write: if isAuthenticated() && 
+        request.auth.uid == userId &&
+        request.resource.size < 2 * 1024 * 1024 && // Максимум 2MB
+        request.resource.contentType.matches('image/.*');
+    }
+    
+    // ============================================
+    // DEFAULT: запрет доступа ко всем остальным файлам
+    // ============================================
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
